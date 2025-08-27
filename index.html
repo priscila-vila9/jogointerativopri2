@@ -1,713 +1,544 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mario Speed Rush - Corrida Revolucionária</title>
+    <title>Magic Orb Collector</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
-            background: linear-gradient(135deg, #8E44AD, #3498DB);
-            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
             overflow: hidden;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            color: white;
         }
 
-        #game-container {
-            width: 100%;
-            height: 100vh;
+        .game-container {
             position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 80vh;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
             overflow: hidden;
-            background: linear-gradient(to bottom, #87CEEB 70%, #4CAF50 70%);
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
 
-        /* Tela de início */
-        #start-screen {
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 100;
+        }
+
+        .score, .timer {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            box-shadow: 0 0 30px currentColor;
+        }
+
+        .orb:hover {
+            transform: scale(1.1);
+        }
+
+        .orb.purple {
+            background: linear-gradient(135deg, #8a2be2, #9370db);
+            color: #e6e6fa;
+            box-shadow: 0 0 40px #8a2be2;
+        }
+
+        .orb.blue {
+            background: linear-gradient(135deg, #4169e1, #00bfff);
+            color: #e6f7ff;
+            box-shadow: 0 0 40px #4169e1;
+        }
+
+        .orb.green {
+            background: linear-gradient(135deg, #32cd32, #00ff7f);
+            color: #f0fff0;
+            box-shadow: 0 0 40px #32cd32;
+        }
+
+        .orb.red {
+            background: linear-gradient(135deg, #ff4500, #ff6347);
+            color: #fff5f5;
+            box-shadow: 0 0 40px #ff4500;
+        }
+
+        .orb.gold {
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            color: #fffacd;
+            box-shadow: 0 0 50px #ffd700;
+        }
+
+        .game-over, .start-screen, .time-up {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.9);
             z-index: 1000;
-            transition: transform 1s ease-in-out;
+            text-align: center;
+            padding: 20px;
         }
 
-        .game-title {
+        .start-screen {
+            background: rgba(26, 26, 46, 0.95);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+
+        .final-score {
             font-size: 4rem;
+            margin: 20px 0;
+            color: #ffd700;
+            text-shadow: 0 0 20px #ffd700;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
             font-weight: bold;
-            color: #fff;
-            text-shadow: 4px 4px 0 #FF6B6B, 
-                        8px 8px 0 #4ECDC4,
-                        12px 12px 0 #45B7D1;
-            margin-bottom: 2rem;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-30px);}
-            60% {transform: translateY(-15px);}
-        }
-
-        .start-button {
-            padding: 20px 50px;
-            font-size: 1.5rem;
-            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
             border: none;
             border-radius: 50px;
             color: white;
             cursor: pointer;
+            margin: 10px;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .start-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.6);
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
 
-        /* Elementos do jogo */
-        #game-area {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+        .btn:active {
+            transform: translateY(0);
         }
 
-        #road {
+        .instructions {
+            margin: 30px 0;
+            max-width: 500px;
+            line-height: 1.6;
+            color: #cccccc;
+        }
+
+        .orb-collect-animation {
             position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(to bottom, #7F8C8D, #95A5A6);
-            perspective: 500px;
-        }
-
-        .road-line {
-            position: absolute;
-            width: 10px;
-            height: 50px;
-            background: white;
-            animation: roadMove 2s linear infinite;
-        }
-
-        @keyframes roadMove {
-            0% { transform: translateY(-100px); }
-            100% { transform: translateY(200px); }
-        }
-
-        #player {
-    position: absolute;
-    bottom: 120px;
-    left: 50%;
-    width: 80px;
-    height: 80px;
-    background-image: url('mario1.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center bottom;
-    transform: translateX(-50%);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    transition: transform 0.2s ease;
-    z-index: 100;
-    border-radius: 0; /* removido para imagem */
-}
-
-
-        .obstacle {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
-            background: #34495E;
-            animation: obstacleMove 3s linear forwards;
-            z-index: 50;
-        }
-
-        @keyframes obstacleMove {
-            0% { transform: translateY(-100px); }
-            100% { transform: translateY(1000px); }
-        }
-
-        .coin {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: radial-gradient(circle at 30% 30%, #FFD700, #FFA500);
-            border-radius: 50%;
-            animation: coinSpin 2s linear infinite, coinMove 4s linear forwards;
-            box-shadow: 0 0 15px #FFD700;
-            z-index: 75;
-        }
-
-        @keyframes coinSpin {
-            0% { transform: rotateY(0deg); }
-            100% { transform: rotateY(360deg); }
-        }
-
-        @keyframes coinMove {
-            0% { transform: translateY(-100px) rotateY(0deg); }
-            100% { transform: translateY(1000px) rotateY(360deg); }
-        }
-
-        /* UI do jogo */
-        #game-ui {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            font-size: 1.5rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd700;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
             z-index: 200;
         }
 
-        #score {
-            font-weight: bold;
-            color: #FFD700;
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) scale(1.5);
+            }
         }
 
-        #timer {
-            margin-top: 10px;
-            font-weight: bold;
-            color: #FF6B6B;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
-        #game-over {
+        .timer.warning {
+            animation: pulse 0.5s infinite;
+            color: #ff6b6b;
+        }
+
+        .particles {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            color: white;
-            transition: transform 0.5s ease;
-            z-index: 1000;
-        }
-
-        #game-over.visible {
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        #final-score {
-            font-size: 2rem;
-            color: #FFD700;
-            margin: 20px 0;
-        }
-
-        #restart-button {
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            background: linear-gradient(45deg, #00C9FF, #92FE9D);
-            border: none;
-            border-radius: 25px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        #restart-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 20px rgba(146, 254, 157, 0.4);
-        }
-
-        /* Efeitos especiais */
-        .explosion {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            background: radial-gradient(circle, #FF6B6B, #FF8E53, transparent 70%);
-            border-radius: 50%;
-            animation: explode 0.5s ease-out;
-            z-index: 90;
-        }
-
-        @keyframes explode {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(3); opacity: 0; }
-        }
-
-        .speed-effect {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-            animation: speedFlash 5.0s ease-in-out;
-            z-index: 80;
+            pointer-events: none;
         }
 
-        @keyframes speedFlash {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: particleFloat 2s ease-out forwards;
         }
 
-        /* Responsividade */
+        @keyframes particleFloat {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(1);
+            }
+        }
+
         @media (max-width: 768px) {
-            .game-title {
-                font-size: 2.5rem;
-            }
-            
-            .start-button {
-                padding: 15px 30px;
-                font-size: 1.2rem;
-            }
-            
-            #player {
-                width: 60px;
-                height: 60px;
-            }
-            
-            .obstacle {
-                width: 50px;
-                height: 50px;
-            }
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.5rem; }
+            .btn { padding: 12px 30px; font-size: 1rem; }
+            .score, .timer { font-size: 1rem; padding: 10px 20px; }
+            .final-score { font-size: 3rem; }
         }
-
-        #mobile-controls {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
-    display: none;
-    justify-content: center;
-    gap: 30px;
-    z-index: 1001;
-    pointer-events: none; /* preveni conflitos quando inativo */
-}
-
-#mobile-controls button {
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    font-size: 2rem;
-    border: none;
-    border-radius: 50%;
-    width: 70px;
-    height: 70px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-    pointer-events: auto;
-    transition: transform 0.2s ease;
-}
-
-#mobile-controls button:active {
-    transform: scale(1.2);
-}
-
-/* Mostrar controles apenas em telas pequenas */
-@media (max-width: 768px) {
-    #mobile-controls {
-        display: flex;
-    }
-}
-
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <!-- Tela de Início -->
-        <div id="start-screen">
-            <h1 class="game-title">MARIO SUPER RÁPIDO</h1>
-            <p style="color: white; font-size: 1.2rem; margin-bottom: 2rem; text-align: center;">
-                Desvie dos obstáculos, colete moedas e sobreviva o máximo possível!
-            </p>
-            <button class="start-button" onclick="startGame()">JOGAR AGORA</button>
-            <div style="margin-top: 2rem; color: white; text-align: center;">
-                <p>← → Movimentar</p>
-                <p>ESPACO para turbo</p>
-            </div>
+    <div class="game-container" id="gameContainer">
+        <div class="game-ui">
+            <div class="score" id="score">Pontuação: 0</div>
+            <div class="timer" id="timer">Tempo: 30s</div>
         </div>
-
-        <!-- Área Principal do Jogo -->
-        <div id="game-area">
-            <!-- Estrada -->
-            <div id="road"></div>
-            
-            <!-- Jogador -->
-            <div id="player"></div>
-            
-            <!-- Interface do Jogo -->
-            <div id="game-ui">
-                <div>Pontuação: <span id="score">0</span></div>
-                <div>Tempo: <span id="timer">60</span>s</div>
-                <div>Vidas: <span id="lives">3</span> ❤️</div>
+        
+        <div class="particles" id="particles"></div>
+        
+        <div class="start-screen" id="startScreen">
+            <h1>✨ Magic Orb Collector ✨</h1>
+            <div class="instructions">
+                <p>Toque nas orbes mágicas antes que elas desapareçam!</p>
+                <p>Orbes maiores valem mais pontos. Cores especiais dão bônus!</p>
+                <p>Tens 30 segundos para conseguir a maior pontuação possível.</p>
             </div>
-
-            <!-- Tela de Game Over -->
-            <div id="game-over">
-                <h2 style="color: #FF6B6B; font-size: 2.5rem;">GAME OVER!</h2>
-                <p style="font-size: 1.2rem; margin: 20px 0;">Sua pontuação final:</p>
-                <div id="final-score">0</div>
-                <button id="restart-button" onclick="restartGame()">JOGAR NOVAMENTE</button>
-            </div>
+            <button class="btn" id="startBtn">Começar Jogo</button>
+        </div>
+        
+        <div class="game-over" id="gameOver" style="display: none;">
+            <h2>Game Over!</h2>
+            <div class="final-score" id="finalScore">0</div>
+            <button class="btn" id="restartBtn">Jogar Novamente</button>
+        </div>
+        
+        <div class="time-up" id="timeUp" style="display: none;">
+            <h2>Tempo Esgotado!</h2>
+            <div class="final-score" id="timeUpScore">0</div>
+            <button class="btn" id="continueBtn">Ver Pontuação</button>
         </div>
     </div>
 
-    <!-- Controles Mobile -->
-<div id="mobile-controls">
-    <button id="btn-left">⬅️</button>
-    <button id="btn-boost">⚡</button>
-    <button id="btn-right">➡️</button>
-</div>
-
-
     <script>
-        // Variáveis do jogo
-        let gameStarted = false;
-        let score = 0;
-        let timer = 60;
-        let lives = 3;
-        let gameInterval;
-        let obstacleInterval;
-        let coinInterval;
-        let timerInterval;
-        let playerSpeed = 100;
-        let isBoostActive = false;
-        let boostTimeout;
-        let audioContext;
-        let obstacles = [];
-        let coins = [];
-
-        // Elementos DOM
-        const startScreen = document.getElementById('start-screen');
-        const gameArea = document.getElementById('game-area');
-        const player = document.getElementById('player');
-        const scoreDisplay = document.getElementById('score');
-        const timerDisplay = document.getElementById('timer');
-        const livesDisplay = document.getElementById('lives');
-        const gameOverScreen = document.getElementById('game-over');
-        const finalScoreDisplay = document.getElementById('final-score');
-        const road = document.getElementById('road');
-
-        // Sons do jogo (Web Audio API)
-        function playSound(frequency, duration, type = 'sine') {
-            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        class MagicOrbGame {
+            constructor() {
+                this.score = 0;
+                this.timeLeft = 30;
+                this.gameActive = false;
+                this.timerInterval = null;
+                this.orbInterval = null;
+                
+                this.gameContainer = document.getElementById('gameContainer');
+                this.startScreen = document.getElementById('startScreen');
+                this.gameOverScreen = document.getElementById('gameOver');
+                this.timeUpScreen = document.getElementById('timeUp');
+                this.scoreDisplay = document.getElementById('score');
+                this.timerDisplay = document.getElementById('timer');
+                this.finalScoreDisplay = document.getElementById('finalScore');
+                this.timeUpScoreDisplay = document.getElementById('timeUpScore');
+                this.particlesContainer = document.getElementById('particles');
+                
+                this.setupEventListeners();
+            }
             
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+            setupEventListeners() {
+                document.getElementById('startBtn').addEventListener('click', () => this.startGame());
+                document.getElementById('restartBtn').addEventListener('click', () => this.restartGame());
+                document.getElementById('continueBtn').addEventListener('click', () => this.showGameOver());
+                
+                // Suporte para touch e mouse
+                this.gameContainer.addEventListener('touchstart', (e) => this.handleInteraction(e), { passive: false });
+                this.gameContainer.addEventListener('mousedown', (e) => this.handleInteraction(e));
+            }
             
-            oscillator.type = type;
-            oscillator.frequency.value = frequency;
-            gainNode.gain.value = 0.3;
+            startGame() {
+                this.score = 0;
+                this.timeLeft = 30;
+                this.gameActive = true;
+                
+                this.startScreen.style.display = 'none';
+                this.gameOverScreen.style.display = 'none';
+                this.timeUpScreen.style.display = 'none';
+                
+                this.updateScore();
+                this.updateTimer();
+                
+                // Limpar orbes existentes
+                document.querySelectorAll('.orb').forEach(orb => orb.remove());
+                
+                // Iniciar temporizador
+                this.timerInterval = setInterval(() => this.updateGameTimer(), 1000);
+                
+                // Gerar orbes periodicamente
+                this.orbInterval = setInterval(() => this.generateOrb(), 800);
+                
+                // Gerar algumas orbes iniciais
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => this.generateOrb(), i * 300);
+                }
+            }
             
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+            updateGameTimer() {
+                this.timeLeft--;
+                this.updateTimer();
+                
+                if (this.timeLeft <= 5) {
+                    this.timerDisplay.classList.add('warning');
+                }
+                
+                if (this.timeLeft <= 0) {
+                    this.endGame('time');
+                }
+            }
             
-            oscillator.start();
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + duration);
+            updateScore() {
+                this.scoreDisplay.textContent = `Pontuação: ${this.score}`;
+            }
             
-            setTimeout(() => oscillator.stop(), duration * 1000);
-        }
-
-        // Iniciar jogo
-        function startGame() {
-            if (gameStarted) return;
+            updateTimer() {
+                this.timerDisplay.textContent = `Tempo: ${this.timeLeft}s`;
+            }
             
-            gameStarted = true;
-            score = 0;
-            timer = 60;
-            lives = 3;
+            generateOrb() {
+                if (!this.gameActive) return;
+                
+                const orb = document.createElement('div');
+                orb.className = 'orb';
+                
+                // Tamanhos e pontos aleatórios
+                const sizes = [40, 50, 60, 70, 80];
+                const points = [5, 10, 15, 20, 30];
+                const sizeIndex = Math.floor(Math.random() * sizes.length);
+                const size = sizes[sizeIndex];
+                
+                // Cores aleatórias
+                const colors = ['purple', 'blue', 'green', 'red'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Chance de ouro (5%)
+                const isGold = Math.random() < 0.05;
+                
+                orb.classList.add(isGold ? 'gold' : color);
+                orb.style.width = `${size}px`;
+                orb.style.height = `${size}px`;
+                
+                // Posição aleatória (evitando bordas)
+                const maxX = this.gameContainer.offsetWidth - size - 20;
+                const maxY = this.gameContainer.offsetHeight - size - 20;
+                const x = Math.floor(Math.random() * maxX) + 10;
+                const y = Math.floor(Math.random() * maxY) + 10;
+                
+                orb.style.left = `${x}px`;
+                orb.style.top = `${y}px`;
+                
+                // Dados da orb
+                orb.dataset.points = isGold ? 50 : points[sizeIndex];
+                orb.dataset.lifetime = isGold ? 3000 : 2000 + Math.random() * 2000;
+                
+                this.gameContainer.appendChild(orb);
+                
+                // Remover após tempo aleatório
+                setTimeout(() => {
+                    if (orb.parentNode) {
+                        orb.style.opacity = '0';
+                        orb.style.transform = 'scale(0)';
+                        setTimeout(() => orb.remove(), 300);
+                    }
+                }, parseInt(orb.dataset.lifetime));
+            }
             
-            // Limpar elementos antigos
-            obstacles.forEach(obs => obs.remove());
-            coins.forEach(coin => coin.remove());
-            obstacles = [];
-            coins = [];
+            handleInteraction(e) {
+                if (!this.gameActive) return;
+                
+                e.preventDefault();
+                
+                const rect = this.gameContainer.getBoundingClientRect();
+                let x, y;
+                
+                if (e.type === 'touchstart') {
+                    x = e.touches[0].clientX - rect.left;
+                    y = e.touches[0].clientY - rect.top;
+                } else {
+                    x = e.clientX - rect.left;
+                    y = e.clientY - rect.top;
+                }
+                
+                // Verificar se tocou em alguma orb
+                const orbs = document.querySelectorAll('.orb');
+                orbs.forEach(orb => {
+                    const orbRect = orb.getBoundingClientRect();
+                    const orbX = orbRect.left - rect.left;
+                    const orbY = orbRect.top - rect.top;
+                    const orbSize = orb.offsetWidth;
+                    
+                    // Verificar colisão
+                    if (x >= orbX && x <= orbX + orbSize &&
+                        y >= orbY && y <= orbY + orbSize) {
+                        this.collectOrb(orb);
+                    }
+                });
+            }
             
-            // Esconder tela inicial
-            startScreen.style.transform = 'translateY(-100%)';
+            collectOrb(orb) {
+                const points = parseInt(orb.dataset.points);
+                this.score += points;
+                this.updateScore();
+                
+                // Animação de coleta
+                this.createCollectAnimation(orb, points);
+                this.createParticles(orb);
+                
+                // Remover orb
+                orb.style.opacity = '0';
+                orb.style.transform = 'scale(0)';
+                setTimeout(() => orb.remove(), 300);
+            }
             
-            // Atualizar UI
-            updateUI();
+            createCollectAnimation(orb, points) {
+                const animation = document.createElement('div');
+                animation.className = 'orb-collect-animation';
+                animation.textContent = `+${points}`;
+                
+                const rect = orb.getBoundingClientRect();
+                const containerRect = this.gameContainer.getBoundingClientRect();
+                
+                animation.style.left = `${rect.left - containerRect.left + orb.offsetWidth / 2}px`;
+                animation.style.top = `${rect.top - containerRect.top}px`;
+                
+                this.gameContainer.appendChild(animation);
+                
+                setTimeout(() => animation.remove(), 1000);
+            }
             
-            // Iniciar estrada
-            createRoadLines();
+            createParticles(orb) {
+                const rect = orb.getBoundingClientRect();
+                const containerRect = this.gameContainer.getBoundingClientRect();
+                const x = rect.left - containerRect.left + orb.offsetWidth / 2;
+                const y = rect.top - containerRect.top + orb.offsetHeight / 2;
+                
+                for (let i = 0; i < 15; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    
+                    const size = Math.random() * 10 + 2;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 100 + 50;
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance;
+                    
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}px`);
+                    
+                    particle.style.left = `${x}px`;
+                    particle.style.top = `${y}px`;
+                    
+                    // Cor baseada na orb
+                    const orbColor = window.getComputedStyle(orb).background;
+                    particle.style.background = orbColor;
+                    
+                    this.particlesContainer.appendChild(particle);
+                    
+                    setTimeout(() => particle.remove(), 2000);
+                }
+            }
             
-            // Iniciar intervalos do jogo
-            gameInterval = setInterval(updateGame, 16); // ~60FPS
-            obstacleInterval = setInterval(createObstacle, 1500);
-            coinInterval = setInterval(createCoin, 2000);
-            timerInterval = setInterval(updateTimer, 1000);
+            endGame(reason) {
+                this.gameActive = false;
+                clearInterval(this.timerInterval);
+                clearInterval(this.orbInterval);
+                
+                // Limpar orbes restantes
+                document.querySelectorAll('.orb').forEach(orb => {
+                    orb.style.opacity = '0';
+                    orb.style.transform = 'scale(0)';
+                    setTimeout(() => orb.remove(), 300);
+                });
+                
+                if (reason === 'time') {
+                    this.timeUpScoreDisplay.textContent = this.score;
+                    this.timeUpScreen.style.display = 'flex';
+                } else {
+                    this.showGameOver();
+                }
+            }
             
-            // Iniciar áudio
-            playSound(523.25, 0.5); // Nota C5
-        }
-
-        // Atualizar UI
-        function updateUI() {
-            scoreDisplay.textContent = score;
-            timerDisplay.textContent = timer;
-            livesDisplay.textContent = lives;
-        }
-
-        // Criar linhas da estrada
-        function createRoadLines() {
-            road.innerHTML = '';
-            for (let i = 0; i < 20; i++) {
-                const line = document.createElement('div');
-                line.classList.add('road-line');
-                line.style.left = `${(i * 20) % 100}%`;
-                line.style.top = `${(i * 50) % 200 - 50}px`;
-                road.appendChild(line);
+            showGameOver() {
+                this.finalScoreDisplay.textContent = this.score;
+                this.timeUpScreen.style.display = 'none';
+                this.gameOverScreen.style.display = 'flex';
+            }
+            
+            restartGame() {
+                this.startGame();
             }
         }
-
-        // Criar obstáculos
-        function createObstacle() {
-            if (!gameStarted) return;
-            
-            const obstacle = document.createElement('div');
-            obstacle.classList.add('obstacle');
-            obstacle.style.left = `${Math.random() * 85}%`;
-            obstacle.dataset.created = Date.now();
-            gameArea.appendChild(obstacle);
-            obstacles.push(obstacle);
-            
-            // Remover após animação
-            setTimeout(() => {
-                if (obstacle.parentNode) {
-                    obstacle.remove();
-                    obstacles = obstacles.filter(obs => obs !== obstacle);
-                }
-            }, 3000);
-        }
-
-        // Criar moedas
-        function createCoin() {
-            if (!gameStarted) return;
-            
-            const coin = document.createElement('div');
-            coin.classList.add('coin');
-            coin.style.left = `${Math.random() * 85}%`;
-            coin.dataset.created = Date.now();
-            gameArea.appendChild(coin);
-            coins.push(coin);
-            
-            // Remover após animação
-            setTimeout(() => {
-                if (coin.parentNode) {
-                    coin.remove();
-                    coins = coins.filter(c => c !== coin);
-                }
-            }, 4000);
-        }
-
-        // Atualizar jogo
-        function updateGame() {
-            if (!gameStarted) return;
-            
-            // Verificar colisões
-            checkCollisions();
-        }
-
-        // Verificar colisões
-        function checkCollisions() {
-            const playerRect = player.getBoundingClientRect();
-            
-            // Verificar colisão com obstáculos
-            obstacles.forEach(obstacle => {
-                const obstacleRect = obstacle.getBoundingClientRect();
-                if (isColliding(playerRect, obstacleRect)) {
-                    handleCollision(obstacle);
-                }
-            });
-            
-            // Verificar colisão com moedas
-            coins.forEach(coin => {
-                const coinRect = coin.getBoundingClientRect();
-                if (isColliding(playerRect, coinRect)) {
-                    collectCoin(coin);
-                }
-            });
-        }
-
-        // Verificar se está colidindo
-        function isColliding(rect1, rect2) {
-            return !(
-                rect1.right < rect2.left ||
-                rect1.left > rect2.right ||
-                rect1.bottom < rect2.top ||
-                rect1.top > rect2.bottom
-            );
-        }
-
-        // Lidar com colisão
-        function handleCollision(obstacle) {
-            lives--;
-            updateUI();
-            
-            // Criar efeito de explosão
-            const explosion = document.createElement('div');
-            explosion.classList.add('explosion');
-            explosion.style.left = obstacle.style.left;
-            explosion.style.top = obstacle.style.top;
-            gameArea.appendChild(explosion);
-            
-            // Remover explosão após animação
-            setTimeout(() => explosion.remove(), 500);
-            
-            // Remover obstáculo
-            obstacle.remove();
-            obstacles = obstacles.filter(obs => obs !== obstacle);
-            
-            // Tocar som
-            playSound(220, 0.5); // Nota A4
-            
-            if (lives <= 0) {
-                endGame();
-            }
-        }
-
-        // Coletar moeda
-        function collectCoin(coin) {
-            score += 10;
-            updateUI();
-            
-            // Remover moeda
-            coin.remove();
-            coins = coins.filter(c => c !== coin);
-            
-            // Tocar som
-            playSound(523.25, 0.3); // Nota C5
-        }
-
-        // Atualizar temporizador
-        function updateTimer() {
-            if (!gameStarted) return;
-            
-            timer--;
-            updateUI();
-            
-            if (timer <= 0) {
-                endGame();
-            }
-        }
-
-        // Finalizar jogo
-        function endGame() {
-            gameStarted = false;
-            
-            // Parar intervalos
-            clearInterval(gameInterval);
-            clearInterval(obstacleInterval);
-            clearInterval(coinInterval);
-            clearInterval(timerInterval);
-            
-            // Mostrar tela de game over
-            gameOverScreen.classList.add('visible');
-            finalScoreDisplay.textContent = score;
-            
-            // Tocar som de game over
-            playSound(196, 1); // Nota G3
-        }
-
-        // Reiniciar jogo
-        function restartGame() {
-            // Limpar elementos
-            obstacles.forEach(obs => obs.remove());
-            coins.forEach(coin => coin.remove());
-            obstacles = [];
-            coins = [];
-            
-            // Esconder tela de game over
-            gameOverScreen.classList.remove('visible');
-            
-            // Mostrar tela inicial
-            startScreen.style.transform = 'translateY(0)';
-        }
-
-        // Movimentar jogador
-        document.addEventListener('keydown', (event) => {
-            if (!gameStarted) return;
-            
-            if (event.key === 'ArrowLeft') {
-                movePlayer(-playerSpeed);
-            } else if (event.key === 'ArrowRight') {
-                movePlayer(playerSpeed);
-            } else if (event.key === ' ') {
-                activateBoost();
-            }
+        
+        // Inicializar o jogo quando a página carregar
+        window.addEventListener('load', () => {
+            new MagicOrbGame();
         });
-
-        function movePlayer(delta) {
-            const playerRect = player.getBoundingClientRect();
-            const gameAreaRect = gameArea.getBoundingClientRect();
-            const newLeft = player.offsetLeft + delta;
-            
-            // Limitar movimento dentro da área do jogo
-            if (newLeft >= 0 && newLeft <= gameAreaRect.width - playerRect.width) {
-                player.style.left = `${newLeft}px`;
-            }
-        }
-
-        function activateBoost() {
-            if (isBoostActive || !gameStarted) return;
-            
-            isBoostActive = true;
-            const originalSpeed = playerSpeed;
-            playerSpeed *= 2;
-            
-            // Criar efeito visual
-            const speedEffect = document.createElement('div');
-            speedEffect.classList.add('speed-effect');
-            gameArea.appendChild(speedEffect);
-            
-            setTimeout(() => {
-                speedEffect.remove();
-            }, 300);
-            
-            // Restaurar velocidade após 3 segundos
-            setTimeout(() => {
-                playerSpeed = originalSpeed;
-                isBoostActive = false;
-            }, 3000);
-        }
-
-        // Controles Mobile
-const btnLeft = document.getElementById('btn-left');
-const btnRight = document.getElementById('btn-right');
-const btnBoost = document.getElementById('btn-boost');
-
-let moveLeftInterval, moveRightInterval;
-
-btnLeft.addEventListener('touchstart', () => {
-    if (!gameStarted) return;
-    moveLeftInterval = setInterval(() => movePlayer(-playerSpeed), 100);
-});
-
-btnLeft.addEventListener('touchend', () => {
-    clearInterval(moveLeftInterval);
-});
-
-btnRight.addEventListener('touchstart', () => {
-    if (!gameStarted) return;
-    moveRightInterval = setInterval(() => movePlayer(playerSpeed), 100);
-});
-
-btnRight.addEventListener('touchend', () => {
-    clearInterval(moveRightInterval);
-});
-
-btnBoost.addEventListener('touchstart', () => {
-    if (!gameStarted) return;
-    activateBoost();
-});
-
     </script>
 </body>
 </html>
+
